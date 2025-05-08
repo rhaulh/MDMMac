@@ -13,15 +13,31 @@ NC='\033[0m'
 echo -e "${CYAN}MovilUnlock MDM Bypass${NC}"
 echo ""
         "Bypass MDM from Recovery")
+
+        # Function to get the system volume name
+get_system_volume() {
+    system_volume=$(diskutil info / | grep "Device Node" | awk -F': ' '{print $2}' | xargs diskutil info | grep "Volume Name" | awk -F': ' '{print $2}' | tr -d ' ')
+    echo "$system_volume"
+}
+
+# Get the system volume name
+system_volume=$(get_system_volume)
+
+          "Bypass MDM from Recovery")
             # Bypass MDM from Recovery
-            if [ -d "/Volumes/Macintosh HD - Data" ]; then
-                diskutil rename "Macintosh HD - Data" "Data"
+            echo -e "${YEL}Bypass MDM from Recovery"
+            if [ -d "/Volumes/$system_volume - Data" ]; then
+                diskutil rename "$system_volume - Data" "Data"
             fi
 
             # Create Temporary User
-            realName="Apple"
-            username="Apple"
-            passw="1234"
+            echo -e "${NC}Create a Temporary User"
+            read -p "Enter Temporary Fullname (Default is 'Apple'): " realName
+            realName="${realName:=Apple}"
+            read -p "Enter Temporary Username (Default is 'Apple'): " username
+            username="${username:=Apple}"
+            read -p "Enter Temporary Password (Default is '1234'): " passw
+            passw="${passw:=1234}"
 
             # Create User
             dscl_path='/Volumes/Data/private/var/db/dslocal/nodes/Default'
@@ -37,18 +53,18 @@ echo ""
             dscl -f "$dscl_path" localhost -append "/Local/Default/Groups/admin" GroupMembership $username
 
             # Block MDM domains
-            echo "0.0.0.0 deviceenrollment.apple.com" >>/Volumes/Macintosh\ HD/etc/hosts
-            echo "0.0.0.0 mdmenrollment.apple.com" >>/Volumes/Macintosh\ HD/etc/hosts
-            echo "0.0.0.0 iprofiles.apple.com" >>/Volumes/Macintosh\ HD/etc/hosts
+            echo "0.0.0.0 deviceenrollment.apple.com" >>/Volumes/"$system_volume"/etc/hosts
+            echo "0.0.0.0 mdmenrollment.apple.com" >>/Volumes/"$system_volume"/etc/hosts
+            echo "0.0.0.0 iprofiles.apple.com" >>/Volumes/"$system_volume"/etc/hosts
             echo -e "${GRN}Successfully blocked MDM & Profile Domains"
 
             # Remove configuration profiles
-            rm -rf /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigHasActivationRecord
-            rm -rf /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigRecordFound
-            touch /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigProfileInstalled
-            touch /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigRecordNotFound
+            touch /Volumes/Data/private/var/db/.AppleSetupDone
+            rm -rf /Volumes/"$system_volume"/var/db/ConfigurationProfiles/Settings/.cloudConfigHasActivationRecord
+            rm -rf /Volumes/"$system_volume"/var/db/ConfigurationProfiles/Settings/.cloudConfigRecordFound
+            touch /Volumes/"$system_volume"/var/db/ConfigurationProfiles/Settings/.cloudConfigProfileInstalled
+            touch /Volumes/"$system_volume"/var/db/ConfigurationProfiles/Settings/.cloudConfigRecordNotFound
 
             echo -e "${GRN}MDM enrollment has been bypassed!${NC}"
             echo -e "${NC}Exit terminal and reboot your Mac.${NC}"
-    esac
-done
+            break
