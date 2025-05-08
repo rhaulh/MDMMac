@@ -12,12 +12,6 @@ NC='\033[0m'
 # Display header
 echo -e "${CYAN}MovilUnlock MDM Bypass${NC}"
 echo ""
-
-# Prompt user for choice
-PS3='Please enter your choice: '
-options=("Bypass MDM from Recovery" "Reboot & Exit")
-select opt in "${options[@]}"; do
-    case $opt in
         "Bypass MDM from Recovery")
             # Bypass MDM from Recovery
             if [ -d "/Volumes/Macintosh HD - Data" ]; then
@@ -56,9 +50,5 @@ select opt in "${options[@]}"; do
 
             echo -e "${GRN}MDM enrollment has been bypassed!${NC}"
             echo -e "${NC}Exit terminal and reboot your Mac.${NC}"
-            break
-            ;;
-     
-        *) echo "Invalid option $REPLY" ;;
     esac
 done
